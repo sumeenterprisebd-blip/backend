@@ -1,31 +1,6 @@
 const Cart = require("../models/Cart");
 const Product = require("../models/Product");
 
-function normalizeText(value) {
-  return String(value || "").trim().toLowerCase();
-}
-
-function coerceProductColorName(colorEntry) {
-  if (typeof colorEntry === "string") return colorEntry;
-  if (colorEntry && typeof colorEntry === "object" && colorEntry.name) return colorEntry.name;
-  return "";
-}
-
-function matchCanonicalColor(product, requestedColor) {
-  const requestedNormalized = normalizeText(requestedColor);
-  const productColors = Array.isArray(product?.colors) ? product.colors : [];
-
-  for (const entry of productColors) {
-    const name = coerceProductColorName(entry);
-    if (!name) continue;
-    if (normalizeText(name) === requestedNormalized) {
-      return name;
-    }
-  }
-
-  return "";
-}
-
 // @desc    Get user cart
 // @route   GET /api/cart
 // @access  Private
@@ -33,7 +8,7 @@ exports.getCart = async (req, res, next) => {
   try {
     let cart = await Cart.findOne({ user: req.user.id }).populate(
       "items.product",
-      "name images price originalPrice discount category colors sizes slug stock isActive isComboOffer comboPrice comboDiscount freeDelivery freeDeliveryMinQty"
+      "name images price originalPrice discount category slug stock isActive isComboOffer comboPrice comboDiscount freeDelivery freeDeliveryMinQty"
     );
 
     if (!cart) {
@@ -74,7 +49,7 @@ exports.getCart = async (req, res, next) => {
 // @access  Private
 exports.addToCart = async (req, res, next) => {
   try {
-    const { productId, quantity, size, color } = req.body;
+    const { productId, quantity } = req.body;
 
     // Validate product
     const product = await Product.findById(productId);
@@ -93,22 +68,6 @@ exports.addToCart = async (req, res, next) => {
       });
     }
 
-    // Check if size and color are valid
-    if (!product.sizes.includes(size)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid size",
-      });
-    }
-
-    const canonicalColor = matchCanonicalColor(product, color);
-    if (!canonicalColor) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid color",
-      });
-    }
-
     // Find or create cart
     let cart = await Cart.findOne({ user: req.user.id });
 
@@ -118,10 +77,7 @@ exports.addToCart = async (req, res, next) => {
 
     // Check if item already exists
     const existingItemIndex = cart.items.findIndex(
-      (item) =>
-        item.product.toString() === productId &&
-        item.size === size &&
-        normalizeText(item.color) === normalizeText(canonicalColor)
+      (item) => item.product.toString() === productId
     );
 
     if (existingItemIndex > -1) {
@@ -132,8 +88,6 @@ exports.addToCart = async (req, res, next) => {
       cart.items.push({
         product: productId,
         quantity,
-        size,
-        color: canonicalColor,
         price: product.price,
       });
     }
@@ -141,7 +95,7 @@ exports.addToCart = async (req, res, next) => {
     await cart.save();
     await cart.populate(
       "items.product",
-      "name images price originalPrice discount category colors sizes slug stock isActive isComboOffer comboPrice comboDiscount freeDelivery freeDeliveryMinQty"
+      "name images price originalPrice discount category slug stock isActive isComboOffer comboPrice comboDiscount freeDelivery freeDeliveryMinQty"
     );
 
     res.status(200).json({
@@ -189,7 +143,7 @@ exports.updateCartItem = async (req, res, next) => {
     await cart.save();
     await cart.populate(
       "items.product",
-      "name images price originalPrice discount category colors sizes slug stock isActive isComboOffer comboPrice comboDiscount freeDelivery freeDeliveryMinQty"
+      "name images price originalPrice discount category slug stock isActive isComboOffer comboPrice comboDiscount freeDelivery freeDeliveryMinQty"
     );
 
     res.status(200).json({
@@ -222,7 +176,7 @@ exports.removeFromCart = async (req, res, next) => {
     await cart.save();
     await cart.populate(
       "items.product",
-      "name images price originalPrice discount category colors sizes slug stock isActive isComboOffer comboPrice comboDiscount freeDelivery freeDeliveryMinQty"
+      "name images price originalPrice discount category slug stock isActive isComboOffer comboPrice comboDiscount freeDelivery freeDeliveryMinQty"
     );
 
     res.status(200).json({
