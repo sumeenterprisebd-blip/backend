@@ -94,53 +94,70 @@ app.disable('x-powered-by');
 // Essential for rate limiting and logging accurate client information
 app.set('trust proxy', 1); // Trust first proxy (Vercel)
 
+// Normalize and collect allowed origins from env/defaults
+const normalizeOrigin = (value) => {
+  if (!value) return "";
+  return value.trim().replace(/\/+$/, "");
+};
+
+const getAllowedOrigins = () => {
+  const configuredOrigins = (process.env.ALLOWED_ORIGINS || process.env.CORS_ORIGINS || "")
+    .split(",")
+    .map(normalizeOrigin)
+    .filter(Boolean);
+
+  const defaults = [
+    process.env.FRONTEND_URL,
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3001",
+    "https://deshwear.shop",
+    "https://www.deshwear.shop",
+    "http://deshwear.shop",
+    "http://www.deshwear.shop",
+    "https://deshwear.com",
+    "https://www.deshwear.com",
+    "http://deshwear.com",
+    "http://www.deshwear.com",
+    "https://sumetraders.com",
+    "https://www.sumetraders.com",
+  ].map(normalizeOrigin).filter(Boolean);
+
+  return [...new Set([...configuredOrigins, ...defaults])];
+};
+
+const allowedOrigins = getAllowedOrigins();
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true;
+
+  const normalizedOrigin = normalizeOrigin(origin);
+  if (allowedOrigins.includes(normalizedOrigin)) return true;
+
+  if (process.env.NODE_ENV === "development") {
+    if (normalizedOrigin.includes("localhost") || normalizedOrigin.includes("127.0.0.1")) {
+      return true;
+    }
+  }
+
+  if (normalizedOrigin.includes("vercel.app")) return true;
+  if (normalizedOrigin.includes("deshwear.shop")) return true;
+  if (normalizedOrigin.includes("sumetraders.com")) return true;
+
+  return false;
+};
+
 // CORS configuration - Must be before other middleware
 const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps, curl, Postman, or same-origin)
     if (!origin) return callback(null, true);
 
-    // Define allowed origins (no trailing slashes)
-    const allowedOrigins = [
-      process.env.FRONTEND_URL || "http://localhost:3000",
-      "http://127.0.0.1:3000",
-      "http://localhost:3001", // Alternative port
-      "http://127.0.0.1:3001",
-      "https://deshwear.shop",
-      "https://www.deshwear.shop",
-      "http://deshwear.shop",
-      "http://www.deshwear.shop",
-      "https://deshwear.com",
-      "https://www.deshwear.com",
-      "http://deshwear.com",
-      "http://www.deshwear.com",
-    ].filter(Boolean); // Remove undefined/null values
-
-    // In development, allow all localhost origins
-    if (process.env.NODE_ENV === "development") {
-      // Check if origin is localhost or 127.0.0.1 with any port
-      if (origin.includes("localhost") || origin.includes("127.0.0.1")) {
-        return callback(null, true);
-      }
-    }
-    // 
-
-    // Check if origin is in allowed list
-    if (allowedOrigins.indexOf(origin) !== -1) {
+    if (isAllowedOrigin(origin)) {
       return callback(null, true);
     }
 
-    // Allow all Vercel deployments (production and preview)
-    if (origin.includes("vercel.app")) {
-      return callback(null, true);
-    }
-
-    // Allow deshwear.shop domain variations
-    if (origin.includes("deshwear.shop")) {
-      return callback(null, true);
-    }
-
-    callback(new Error("Not allowed by CORS"));
+    return callback(null, false);
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
@@ -210,7 +227,7 @@ app.options("*", cors(corsOptions));
 // Additional CORS headers middleware for Vercel (fallback)
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  if (origin && origin.includes("vercel.app")) {
+  if (origin && isAllowedOrigin(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
     res.setHeader("Access-Control-Allow-Credentials", "true");
     res.setHeader(
