@@ -101,7 +101,7 @@ const normalizeOrigin = (value) => {
 };
 
 const getAllowedOrigins = () => {
-  const configuredOrigins = (process.env.ALLOWED_ORIGINS || process.env.CORS_ORIGINS || "")
+  const configuredOrigins = (process.env.FRONTEND_URL || process.env.CORS_ORIGINS || "")
     .split(",")
     .map(normalizeOrigin)
     .filter(Boolean);
@@ -112,14 +112,6 @@ const getAllowedOrigins = () => {
     "http://127.0.0.1:3000",
     "http://localhost:3001",
     "http://127.0.0.1:3001",
-    "https://deshwear.shop",
-    "https://www.deshwear.shop",
-    "http://deshwear.shop",
-    "http://www.deshwear.shop",
-    "https://deshwear.com",
-    "https://www.deshwear.com",
-    "http://deshwear.com",
-    "http://www.deshwear.com",
     "https://sumetraders.com",
     "https://www.sumetraders.com",
   ].map(normalizeOrigin).filter(Boolean);
