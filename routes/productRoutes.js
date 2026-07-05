@@ -23,12 +23,6 @@ const productValidation = [
   body("images")
     .isArray({ min: 1 })
     .withMessage("At least one image is required"),
-  body("colors")
-    .isArray({ min: 1 })
-    .withMessage("At least one color is required"),
-  body("sizes")
-    .isArray({ min: 1 })
-    .withMessage("At least one size is required"),
   body("stock")
     .isInt({ min: 0 })
     .withMessage("Stock must be a non-negative integer"),

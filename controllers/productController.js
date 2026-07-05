@@ -386,20 +386,6 @@ exports.createProduct = async (req, res, next) => {
       });
     }
 
-    if (!colors || !Array.isArray(colors) || colors.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "At least one color is required",
-      });
-    }
-
-    if (!sizes || !Array.isArray(sizes) || sizes.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "At least one size is required",
-      });
-    }
-
     const validImages = images.filter((img) => img && img.trim());
     if (validImages.length === 0) {
       return res.status(400).json({
@@ -413,8 +399,6 @@ exports.createProduct = async (req, res, next) => {
       price: Number(price),
       stock: Number(stock),
       category,
-      colors: Array.isArray(colors) ? colors : [],
-      sizes: Array.isArray(sizes) ? sizes : [],
       images: validImages,
       description: req.body.description?.trim() || "",
       dressStyle: req.body.dressStyle || "Casual",
@@ -424,6 +408,15 @@ exports.createProduct = async (req, res, next) => {
       isComboOffer: req.body.isComboOffer || false,
       freeDelivery: req.body.freeDelivery || false,
     };
+
+    // Include optional colors/sizes only if provided by the client
+    if (Array.isArray(colors) && colors.length > 0) {
+      productData.colors = colors;
+    }
+
+    if (Array.isArray(sizes) && sizes.length > 0) {
+      productData.sizes = sizes;
+    }
 
     if (Array.isArray(req.body.measurements)) {
       const cleanGroups = req.body.measurements
