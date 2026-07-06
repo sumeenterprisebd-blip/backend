@@ -1,6 +1,37 @@
 const Cart = require("../models/Cart");
 const Product = require("../models/Product");
 
+const normalizePricingTiers = (tiers = []) => {
+  if (!Array.isArray(tiers)) return [];
+
+  return tiers
+    .map((tier) => ({
+      minQty: Number(tier?.minQty),
+      maxQty: tier?.maxQty === "" || tier?.maxQty === null || tier?.maxQty === undefined ? null : Number(tier.maxQty),
+      price: Number(tier?.price),
+    }))
+    .filter((tier) => Number.isFinite(tier.minQty) && tier.minQty > 0 && Number.isFinite(tier.price) && tier.price >= 0)
+    .sort((a, b) => a.minQty - b.minQty);
+};
+
+const getEffectiveUnitPrice = (product, quantity = 1) => {
+  const basePrice = Number(product?.price || 0);
+  const safeQuantity = Math.max(1, Number(quantity) || 1);
+  const tiers = normalizePricingTiers(product?.pricingTiers);
+
+  let effectiveUnitPrice = basePrice;
+  for (const tier of tiers) {
+    const meetsMin = safeQuantity >= tier.minQty;
+    const meetsMax = tier.maxQty === null || safeQuantity <= tier.maxQty;
+    if (meetsMin && meetsMax) {
+      effectiveUnitPrice = tier.price;
+      break;
+    }
+  }
+
+  return effectiveUnitPrice;
+};
+
 // @desc    Get user cart
 // @route   GET /api/cart
 // @access  Private
@@ -49,7 +80,7 @@ exports.getCart = async (req, res, next) => {
 // @access  Private
 exports.addToCart = async (req, res, next) => {
   try {
-    const { productId, quantity, price: requestedPrice } = req.body;
+    const { productId, quantity } = req.body;
 
     // Validate product
     const product = await Product.findById(productId);
@@ -80,16 +111,19 @@ exports.addToCart = async (req, res, next) => {
       (item) => item.product.toString() === productId
     );
 
+    const nextQuantity = existingItemIndex > -1
+      ? cart.items[existingItemIndex].quantity + quantity
+      : quantity;
+    const effectivePrice = getEffectiveUnitPrice(product, nextQuantity);
+
     if (existingItemIndex > -1) {
-      // Update quantity
-      cart.items[existingItemIndex].quantity += quantity;
-      cart.items[existingItemIndex].price = Number.isFinite(Number(requestedPrice)) ? Number(requestedPrice) : product.price;
+      cart.items[existingItemIndex].quantity = nextQuantity;
+      cart.items[existingItemIndex].price = effectivePrice;
     } else {
-      // Add new item
       cart.items.push({
         product: productId,
         quantity,
-        price: Number.isFinite(Number(requestedPrice)) ? Number(requestedPrice) : product.price,
+        price: effectivePrice,
       });
     }
 
@@ -141,6 +175,7 @@ exports.updateCartItem = async (req, res, next) => {
     }
 
     item.quantity = quantity;
+    item.price = getEffectiveUnitPrice(product, item.quantity);
     await cart.save();
     await cart.populate(
       "items.product",

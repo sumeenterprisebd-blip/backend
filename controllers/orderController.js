@@ -167,6 +167,37 @@ const computeUnitOriginal = (unitEffective, rawOriginal, rawDiscountPercent) => 
   return Math.max(original, derivedOriginal, effective);
 };
 
+const normalizePricingTiers = (tiers = []) => {
+  if (!Array.isArray(tiers)) return [];
+
+  return tiers
+    .map((tier) => ({
+      minQty: Number(tier?.minQty),
+      maxQty: tier?.maxQty === "" || tier?.maxQty === null || tier?.maxQty === undefined ? null : Number(tier.maxQty),
+      price: Number(tier?.price),
+    }))
+    .filter((tier) => Number.isFinite(tier.minQty) && tier.minQty > 0 && Number.isFinite(tier.price) && tier.price >= 0)
+    .sort((a, b) => a.minQty - b.minQty);
+};
+
+const getEffectiveUnitPrice = (product, quantity = 1) => {
+  const basePrice = Number(product?.price || 0);
+  const safeQuantity = Math.max(1, Number(quantity) || 1);
+  const tiers = normalizePricingTiers(product?.pricingTiers);
+
+  let effectiveUnitPrice = basePrice;
+  for (const tier of tiers) {
+    const meetsMin = safeQuantity >= tier.minQty;
+    const meetsMax = tier.maxQty === null || safeQuantity <= tier.maxQty;
+    if (meetsMin && meetsMax) {
+      effectiveUnitPrice = tier.price;
+      break;
+    }
+  }
+
+  return effectiveUnitPrice;
+};
+
 const computeOrderPricingFromProducts = (productsWithQty) => {
   const list = Array.isArray(productsWithQty) ? productsWithQty : [];
 
@@ -185,6 +216,36 @@ const computeOrderPricingFromProducts = (productsWithQty) => {
       product.originalPrice,
       product.discount
     );
+
+    originalSubtotal += unitOriginal * qty;
+    effectiveSubtotal += unitEffective * qty;
+    discountAmount += Math.max(unitOriginal - unitEffective, 0) * qty;
+  }
+
+  if (!Number.isFinite(originalSubtotal)) originalSubtotal = 0;
+  if (!Number.isFinite(effectiveSubtotal)) effectiveSubtotal = 0;
+  if (!Number.isFinite(discountAmount)) discountAmount = 0;
+
+  return {
+    originalSubtotal,
+    effectiveSubtotal,
+    discountAmount,
+  };
+};
+
+const computeCartPricingFromItems = (items) => {
+  let originalSubtotal = 0;
+  let effectiveSubtotal = 0;
+  let discountAmount = 0;
+
+  for (const item of items) {
+    const qty = Number(item?.quantity || 0);
+    if (!Number.isFinite(qty) || qty <= 0) continue;
+
+    const unitEffective = Number(item?.price || 0);
+    const rawOriginal = Number(item?.product?.originalPrice || 0);
+    const rawDiscountPercent = Number(item?.product?.discount || 0);
+    const unitOriginal = computeUnitOriginal(unitEffective, rawOriginal, rawDiscountPercent);
 
     originalSubtotal += unitOriginal * qty;
     effectiveSubtotal += unitEffective * qty;
@@ -751,8 +812,7 @@ exports.createOrder = async (req, res, next) => {
           quantity: item.quantity,
           size: item.size,
           color: item.color,
-          // Always use the current product price as the effective (selling) price.
-          price: item.product.price,
+          price: Number.isFinite(Number(item.price)) ? Number(item.price) : getEffectiveUnitPrice(item.product, item.quantity),
         }));
 
         const orderFingerprint = buildOrderFingerprint(cartOrderItems);
@@ -806,9 +866,7 @@ exports.createOrder = async (req, res, next) => {
         // - Original Price: based on product.originalPrice (or derived from discount%)
         // - Selling Price: product.price
         // - Discount: original - selling
-        const pricing = computeOrderPricingFromProducts(
-          (cart.items || []).map((item) => ({ product: item.product, quantity: item.quantity }))
-        );
+        const pricing = computeCartPricingFromItems(cart.items || []);
 
         const advancePaymentAmount = Number(approvedAdvancePayment?.amount || 0);
         const advancePaymentStatus = (approvedAdvancePayment || req.user?.advanceVerified) ? "Verified" : "None";
@@ -1068,9 +1126,7 @@ exports.createOrder = async (req, res, next) => {
         quantity: qty,
         size: String(item.size).trim(),
         color: String(item.color).trim(),
-        // Always use current product price as the effective (selling) price.
-        // This prevents price tampering and matches the checkout display.
-        price: product.price,
+        price: getEffectiveUnitPrice(product, qty),
       });
 
       productsForEligibility.push({ product, quantity: qty });
