@@ -62,6 +62,16 @@ const productSchema = new mongoose.Schema(
       default: 2,
       min: [1, "Free delivery minimum quantity must be at least 1"],
     },
+    pricingTiers: {
+      type: [
+        {
+          minQty: { type: Number, required: true, min: [1, "Tier minimum quantity must be at least 1"] },
+          maxQty: { type: Number, default: null },
+          price: { type: Number, required: true, min: [0, "Tier price must be positive"] },
+        },
+      ],
+      default: [],
+    },
     category: {
       type: String,
       required: [true, "Category is required"],

@@ -49,7 +49,7 @@ exports.getCart = async (req, res, next) => {
 // @access  Private
 exports.addToCart = async (req, res, next) => {
   try {
-    const { productId, quantity } = req.body;
+    const { productId, quantity, price: requestedPrice } = req.body;
 
     // Validate product
     const product = await Product.findById(productId);
@@ -83,12 +83,13 @@ exports.addToCart = async (req, res, next) => {
     if (existingItemIndex > -1) {
       // Update quantity
       cart.items[existingItemIndex].quantity += quantity;
+      cart.items[existingItemIndex].price = Number.isFinite(Number(requestedPrice)) ? Number(requestedPrice) : product.price;
     } else {
       // Add new item
       cart.items.push({
         product: productId,
         quantity,
-        price: product.price,
+        price: Number.isFinite(Number(requestedPrice)) ? Number(requestedPrice) : product.price,
       });
     }
 

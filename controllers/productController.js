@@ -484,6 +484,17 @@ exports.createProduct = async (req, res, next) => {
       productData.comboDiscount = Number(req.body.comboDiscount);
     }
 
+    if (Array.isArray(req.body.pricingTiers)) {
+      productData.pricingTiers = req.body.pricingTiers
+        .filter((tier) => tier && Number.isFinite(Number(tier.minQty)) && Number(tier.minQty) > 0 && Number.isFinite(Number(tier.price)))
+        .map((tier) => ({
+          minQty: Number(tier.minQty),
+          maxQty: tier.maxQty === "" || tier.maxQty === null || tier.maxQty === undefined ? null : Number(tier.maxQty),
+          price: Number(tier.price),
+        }))
+        .sort((a, b) => a.minQty - b.minQty);
+    }
+
     if (
       req.body.tags &&
       Array.isArray(req.body.tags) &&
@@ -538,6 +549,17 @@ exports.updateProduct = async (req, res, next) => {
 
     // Build update data with proper validation
     const updateData = { ...req.body };
+
+    if (Array.isArray(updateData.pricingTiers)) {
+      updateData.pricingTiers = updateData.pricingTiers
+        .filter((tier) => tier && Number.isFinite(Number(tier.minQty)) && Number(tier.minQty) > 0 && Number.isFinite(Number(tier.price)))
+        .map((tier) => ({
+          minQty: Number(tier.minQty),
+          maxQty: tier.maxQty === "" || tier.maxQty === null || tier.maxQty === undefined ? null : Number(tier.maxQty),
+          price: Number(tier.price),
+        }))
+        .sort((a, b) => a.minQty - b.minQty);
+    }
 
     if (Array.isArray(updateData.measurements)) {
       updateData.measurements = updateData.measurements
