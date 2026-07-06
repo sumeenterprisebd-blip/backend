@@ -379,7 +379,7 @@ exports.adminCreateReview = async (req, res, next) => {
         newUserEmail ||
         `temp_${Date.now()}_${Math.random()
           .toString(36)
-          .substring(7)}@deshwear.local`;
+          .substring(7)}@sumetraders.local`;
       const tempPassword =
         Math.random().toString(36).substring(2, 15) +
         Math.random().toString(36).substring(2, 15);

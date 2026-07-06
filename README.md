@@ -1,10 +1,10 @@
-# DeshWear Backend API
+# Sume Traders Backend API
 
 A full-featured e-commerce backend API built with Node.js, Express.js, and MongoDB Atlas.
 
 ## Website Overview
 
-DeshWear is a modern e-commerce platform with a robust backend and a high-performance frontend. The backend provides RESTful APIs for user authentication, product management, cart, orders, reviews, favorites, and admin features. The frontend is built with Next.js, offering fast page loads, optimized images, and a responsive UI for both customers and admins.
+Sume Traders is a modern e-commerce platform with a robust backend and a high-performance frontend. The backend provides RESTful APIs for user authentication, product management, cart, orders, reviews, favorites, and admin features. The frontend is built with Next.js, offering fast page loads, optimized images, and a responsive UI for both customers and admins.
 
 ### Admin Dashboard
 - Manage products, categories, orders, users, reviews, and site settings
@@ -101,7 +101,7 @@ DeshWear is a modern e-commerce platform with a robust backend and a high-perfor
   # Generate keys via: npm run push:vapid
   VAPID_PUBLIC_KEY=your_vapid_public_key
   VAPID_PRIVATE_KEY=your_vapid_private_key
-  VAPID_SUBJECT=mailto:admin@deshwear.shop
+  VAPID_SUBJECT=mailto:admin@sumetraders.shop
    ```
 
 5. **Start the server**
@@ -128,7 +128,7 @@ The server will start on `http://localhost:5000` (or the port specified in `.env
 
    **Note:** Admin credentials:
 
-  - Email: `admin@deshwear.com`
+  - Email: `admin@sumetraders.com`
    - Password: `admin123`
    - ⚠️ Change the password after first login!
 

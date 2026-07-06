@@ -109,7 +109,7 @@ exports.initiatePayment = async ({ req, order }) => {
         ipn_url,
 
         cus_name: customerName,
-        cus_email: String(shipping.email || order?.guestInfo?.email || "").trim() || "support@deshwear.com",
+        cus_email: String(shipping.email || order?.guestInfo?.email || "").trim() || "support@sumetraders.com",
         cus_add1: String(shipping.streetAddress || "").trim() || "N/A",
         cus_city: String(shipping.townCity || "").trim() || "Dhaka",
         cus_state: String(shipping.state || "").trim() || "Dhaka",

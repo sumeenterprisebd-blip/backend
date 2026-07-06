@@ -130,16 +130,16 @@ exports.forgotPassword = async (req, res, next) => {
 
     const transporter = buildSmtpTransporter();
     await transporter.sendMail({
-      from: `"DeshWear Support" <${process.env.FROM_EMAIL || process.env.SMTP_USER}>`,
+      from: `"Sume Traders Support" <${process.env.FROM_EMAIL || process.env.SMTP_USER}>`,
       to: user.email,
       subject: `Reset your password code (${expiresMinutes} min)`,
       text: (() => {
-        const brandName = process.env.BRAND_NAME || "DeshWear";
+        const brandName = process.env.BRAND_NAME || "Sume Traders";
         const safeCode = String(code || "").replace(/[^0-9]/g, "");
         return `${brandName} password reset code: ${safeCode}. Expires in ${expiresMinutes} minutes. Do not share this code with anyone.`;
       })(),
       html: (() => {
-        const brandName = process.env.BRAND_NAME || "DeshWear";
+        const brandName = process.env.BRAND_NAME || "Sume Traders";
         const primary = process.env.BRAND_PRIMARY_COLOR || "#3b82f6";
         const accent = process.env.BRAND_ACCENT_COLOR || "#a855f7";
         const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
@@ -704,7 +704,7 @@ exports.requestEmailOtp = async (req, res, next) => {
 
     const transporter = buildSmtpTransporter();
     const mailOptions = {
-      from: `"DeshWear" <${process.env.FROM_EMAIL || process.env.SMTP_USER}>`,
+      from: `"Sume Traders" <${process.env.FROM_EMAIL || process.env.SMTP_USER}>`,
       to: user.email,
       subject: "Your verification code",
       html: `

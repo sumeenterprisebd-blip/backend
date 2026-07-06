@@ -133,7 +133,7 @@ const isAllowedOrigin = (origin) => {
   }
 
   if (normalizedOrigin.includes("vercel.app")) return true;
-  if (normalizedOrigin.includes("deshwear.shop")) return true;
+  if (normalizedOrigin.includes("sumetraders.shop")) return true;
   if (normalizedOrigin.includes("sumetraders.com")) return true;
 
   return false;
@@ -272,7 +272,7 @@ app.get("/api/health", (req, res) => {
   res.set('Cache-Control', 'public, max-age=60'); // Cache for 1 minute
   res.status(200).json({
     status: "OK",
-    message: "DeshWear Backend API is running",
+    message: "Sume Traders Backend API is running",
     timestamp: new Date().toISOString(),
     compression: req.acceptsEncodings('gzip', 'deflate') || 'none',
   });

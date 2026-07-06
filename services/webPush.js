@@ -8,7 +8,7 @@ let isConfigured = false;
 const getVapidConfig = () => {
     const publicKey = String(process.env.VAPID_PUBLIC_KEY || "").trim();
     const privateKey = String(process.env.VAPID_PRIVATE_KEY || "").trim();
-    const subject = String(process.env.VAPID_SUBJECT || "mailto:admin@deshwear.shop").trim();
+    const subject = String(process.env.VAPID_SUBJECT || "mailto:admin@sumetraders.shop").trim();
 
     return { publicKey, privateKey, subject };
 };

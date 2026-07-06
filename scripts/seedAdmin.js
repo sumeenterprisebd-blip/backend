@@ -11,7 +11,7 @@ const seedAdmin = async () => {
     // Check if admin already exists
 
     // CHANGE THESE VALUES AS NEEDED
-    const newAdminEmail = 'deshwear.store@gmail.com'; // <-- Set new admin email here
+    const newAdminEmail = 'support@sumetraders.com'; // <-- Set new admin email here
     const newAdminPassword = 'sabbiR1257@'; // <-- Set new admin password here
 
     const existingAdmin = await User.findOne({ email: newAdminEmail });

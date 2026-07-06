@@ -24,7 +24,7 @@ const settingsSchema = new mongoose.Schema(
     // Site Identity
     siteName: {
       type: String,
-      default: "DeshWear",
+      default: "Sume Traders",
     },
     logo: {
       type: String,
@@ -42,7 +42,7 @@ const settingsSchema = new mongoose.Schema(
     // Contact Information
     email: {
       type: String,
-      default: "support@deshwear.com",
+      default: "support@sumetraders.com",
     },
     phone: {
       type: String,
@@ -123,11 +123,11 @@ const settingsSchema = new mongoose.Schema(
     footerAbout: {
       type: String,
       default:
-        "Discover the latest trends in fashion with DeshWear. Quality clothing for every style.",
+        "Discover the latest trends in fashion with Sume Traders. Quality clothing for every style.",
     },
     copyrightText: {
       type: String,
-      default: "© 2024 DeshWear. All rights reserved.",
+      default: "© 2024 Sume Traders. All rights reserved.",
     },
 
     // Maintenance
